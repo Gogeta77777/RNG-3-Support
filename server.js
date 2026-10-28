@@ -12,6 +12,9 @@ const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MAIL_SENDER, MAIL_REFRESH_TOKEN, PORT = 3000,
 } = process.env;
 
+const missing = ['DATABASE_URL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'MAIL_SENDER', 'MAIL_REFRESH_TOKEN'].filter((k) => !process.env[k]);
+if (missing.length) console.error('MISSING ENVIRONMENT VARIABLES:', missing.join(', '));
+
 const RECIPIENTS = ['delan2337@ellerslie.school.nz', 'gogetaishereforever77@gmail.com'];
 const GAMES = { rng3: '17 News RNG 3 (2026)', rng2: '17 News RNG 2 (2025)' };
 const TYPES = { bug: 'Bug report', question: 'Question', suggestion: 'Game suggestion', account: 'Account help', other: 'Something else' };
@@ -107,6 +110,7 @@ const b64 = (s) => Buffer.from(s, 'utf8').toString('base64');
 const lastSent = new Map();
 
 async function sendMail({ subject, html, replyTo }) {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !MAIL_SENDER || !MAIL_REFRESH_TOKEN) throw new Error('Mail environment variables are missing');
   const auth = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
   auth.setCredentials({ refresh_token: MAIL_REFRESH_TOKEN });
   const gmail = google.gmail({ version: 'v1', auth });
@@ -152,7 +156,7 @@ app.post('/api/support', async (req, res) => {
     lastSent.set(user.id, Date.now());
     res.json({ ok: true });
   } catch (e) {
-    console.error('Mail failed:', e.message);
+    console.error('MAIL FAILED:', e.message, JSON.stringify(e.response?.data || e.errors || ''));
     res.status(500).json({ error: 'Could not send your request. Try again in a minute.' });
   }
 });

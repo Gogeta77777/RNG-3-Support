@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: 17-news-rng-support
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: BASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: MAIL_SENDER
+        sync: false
+      - key: MAIL_REFRESH_TOKEN
+        sync: false

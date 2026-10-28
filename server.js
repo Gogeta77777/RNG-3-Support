@@ -1,6 +1,8 @@
 const express = require('express');
 const cookieSession = require('cookie-session');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { promisify } = require('util');
 const { Pool } = require('pg');
 const { google } = require('googleapis');
@@ -32,7 +34,13 @@ app.use(cookieSession({
   name: 'rng-support', keys: [SESSION_SECRET], maxAge: 7 * 24 * 3600 * 1000,
   sameSite: 'lax', secure: BASE_URL.startsWith('https'), httpOnly: true,
 }));
-app.use(express.static(__dirname + '/public'));
+// Serve the page from /public, or from index.html in the root if the folder is missing.
+// Only index.html is ever served from the root, never server.js or package.json.
+const publicDir = path.join(__dirname, 'public');
+const indexFile = [path.join(publicDir, 'index.html'), path.join(__dirname, 'index.html')].find((f) => fs.existsSync(f));
+if (fs.existsSync(publicDir)) app.use(express.static(publicDir));
+if (!indexFile) console.error('index.html not found. Put it in a folder named "public".');
+app.get('/', (req, res) => indexFile ? res.sendFile(indexFile) : res.status(500).send('index.html is missing from the repo.'));
 
 // --- Accounts: username + password ---
 const scrypt = promisify(crypto.scrypt);
